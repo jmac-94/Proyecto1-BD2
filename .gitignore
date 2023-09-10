@@ -1,0 +1,5 @@
+.idea/
+*.doc
+*.docx
+CMakeLists.txt
+cmake-build-debug/
