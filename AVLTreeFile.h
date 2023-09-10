@@ -18,77 +18,156 @@ bool fileEmpty(ifstream& file) {
 }
 
 class AVLTreeFile {
+private:
+    // FILE
+    string file_name;
+    fstream file;
+
+    // HEADER
+    int root;
+    int first_deleted_record = -1;
+
+    // FOR BALANCE
+    int parent_last_rotated_node1 = -1;
+    int parent_last_rotated_node2 = -1;
+
 public:
     explicit AVLTreeFile(string file_name) : file_name(std::move(file_name)) {
-        ifstream inFile(this->file_name, ios::binary);
+        ifstream in_file(this->file_name, ios::binary);
 
-        if (!inFile.is_open() | fileEmpty(inFile)) {
-            ofstream outFile(this->file_name, ios::binary);
+        if (!in_file.is_open() | fileEmpty(in_file)) {
+            ofstream out_file(this->file_name, ios::binary);
             root = -1;
-            writeFileRoot(outFile);
-            outFile.close();
+            writeFileRoot(out_file);
+            out_file.close();
         }
         else {
-            root = readFileRoot(inFile);
+            root = readFileRoot(in_file);
         }
 
-        inFile.close();
+        in_file.close();
     }
 
     ~AVLTreeFile() {}
 
+    void add(Record record) {
+        file.open(file_name, ios::binary | ios::in | ios::out);
+
+        Record parent_record;
+        add(root, parent_record, record);
+        writeFileRoot();
+
+        file.close();
+    }
+
+    int height() {
+        return height(root);
+    }
+
+    int minValue() {
+        file.open(file_name, ios::binary | ios::in | ios::out);
+
+        int min_value = minValue(root);
+
+        file.close();
+
+        return min_value;
+    }
+
+    int maxValue() {
+        file.open(file_name, ios::binary | ios::in | ios::out);
+
+        int max_value = maxValue(root);
+
+        file.close();
+
+        return max_value;
+    }
+
+    bool isBalanced() {
+        return isBalanced(root);
+    }
+
+    int size() {
+        file.open(file_name, ios::binary | ios::in);
+
+        int sz = size(root);
+
+        file.close();
+
+        return sz;
+    }
+
+    bool search(Record record) {
+        file.open(file_name, ios::binary | ios::in | ios::out);
+
+        bool found = search(root, record);
+
+        file.close();
+
+        return found;
+    }
+
+    vector<Record> rangeSearch(int begin_key, int end_key) {
+        vector<Record> records;
+
+        rangeSearch(root, records, begin_key, end_key);
+
+        return records;
+    }
+
 private:
-    string file_name;
-    int root;
-    int parent_last_rotated_node1 = -1;
-    int parent_last_rotated_node2 = -1;
+    // FILE METHODS
+    void writeFileRoot(ofstream& out_file) {
+        out_file.seekp(0, ios::beg);
+        out_file.write(reinterpret_cast<char*>(&root), ROOT_SIZE);
+    }
 
-    void writeFileRoot(ofstream& file) {
+    // Writes root_header to the file
+    void writeFileRoot() {
         file.seekp(0, ios::beg);
         file.write(reinterpret_cast<char*>(&root), ROOT_SIZE);
     }
 
-    void writeFileRoot(fstream& file) {
-        file.seekp(0, ios::beg);
-        file.write(reinterpret_cast<char*>(&root), ROOT_SIZE);
-    }
-
-    int readFileRoot(ifstream& file) {
-        file.seekg(0, ios::beg);
+    int readFileRoot(ifstream& in_file) {
+        in_file.seekg(0, ios::beg);
 
         int file_root;
-        file.read(reinterpret_cast<char*>(&file_root), ROOT_SIZE);
+        in_file.read(reinterpret_cast<char*>(&file_root), ROOT_SIZE);
 
         return file_root;
     }
 
+    // USES ITS OWN FILE
     Record getRecordByPos(int pos) {
         if (pos == -1) {
             return Record{};
         }
 
-        fstream file(file_name, ios::binary | ios::in);
+        fstream get_file(file_name, ios::binary | ios::in);
 
         Record record;
 
-        file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
-        file.read(reinterpret_cast<char*>(&record), sizeof(Record));
+        get_file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
+        get_file.read(reinterpret_cast<char*>(&record), sizeof(Record));
 
-        file.close();
+        get_file.close();
 
         return record;
     }
 
+    // USES ITS OWN FILE
     void writeRecord(Record record) {
-        fstream file(file_name, ios::binary | ios::in | ios::out);
+        fstream write_file(file_name, ios::binary | ios::in | ios::out);
 
-        file.seekp(ROOT_SIZE + record.pos * sizeof(Record), ios::beg);
-        file.write(reinterpret_cast<char*>(&record), sizeof(Record));
+        write_file.seekp(ROOT_SIZE + record.pos * sizeof(Record), ios::beg);
+        write_file.write(reinterpret_cast<char*>(&record), sizeof(Record));
 
-        file.close();
+        write_file.close();
     }
 
-    int add(int& pos, Record parent_current, Record& record, fstream& file) {
+    // AVL-FILE STRUCTURE METHODS
+    int add(int& pos, Record parent_current, Record& record) {
         if (pos == -1) {
             file.seekg(0, ios::end);
             pos = ((int) file.tellg() - (int) ROOT_SIZE) / (int) sizeof(Record);
@@ -104,14 +183,14 @@ private:
             file.read(reinterpret_cast<char*>(&current), sizeof(Record));
 
             if (record.code < current.code) {
-                current.left = add(current.left, current, record, file);
+                current.left = add(current.left, current, record);
             }
             else if (record.code > current.code) {
-                current.right = add(current.right, current, record, file);
+                current.right = add(current.right, current, record);
             }
 
             updateHeight(current);
-            balance(current, parent_current, file);
+            balance(current, parent_current);
 
             if (parent_last_rotated_node1 != current.pos && parent_last_rotated_node2 != current.pos) {
                 writeRecord(current);
@@ -147,27 +226,27 @@ private:
         return height(record.left) - height(record.right);
     }
 
-    void balance(Record& record, Record& parent_record, fstream& file) {
+    void balance(Record& record, Record& parent_record) {
         // Left subtree is higher. Right rotation required.
         if (balancingFactor(record) >= 2) {
             // If child's right subtree is higher, rotate such node to the left.
             if (balancingFactor(getRecordByPos(record.left)) <= -1) {
                 Record left_record = getRecordByPos(record.left);
-                parent_last_rotated_node1 = left_rota(left_record, record, file);
+                parent_last_rotated_node1 = left_rota(left_record, record);
             }
-            parent_last_rotated_node2 = right_rota(record, parent_record, file);
+            parent_last_rotated_node2 = right_rota(record, parent_record);
         }
         else if (balancingFactor(record) <= -2) {
             // If child's left subtree is higher, rotate such node to the right.
             if (balancingFactor(getRecordByPos(record.right)) >= 1) {
                 Record right_record = getRecordByPos(record.right);
-                parent_last_rotated_node1 = right_rota(right_record, record, file);
+                parent_last_rotated_node1 = right_rota(right_record, record);
             }
-            parent_last_rotated_node2 = left_rota(record, parent_record, file);
+            parent_last_rotated_node2 = left_rota(record, parent_record);
         }
     }
 
-    int left_rota(Record& record, Record& parent_record, fstream& file) {
+    int left_rota(Record& record, Record& parent_record) {
         if (record.right != -1) {
             Record right_record = getRecordByPos(record.right);
 
@@ -207,7 +286,7 @@ private:
         return -1;
     }
 
-    int right_rota(Record& record, Record& parent_record, fstream& file) {
+    int right_rota(Record& record, Record& parent_record) {
         if (record.left != -1) {
             Record left_record = getRecordByPos(record.left);
 
@@ -247,7 +326,7 @@ private:
         return -1;
     }
 
-    bool search(int pos, Record record, fstream& file) {
+    bool search(int pos, Record record) {
         if (pos == -1) {
             return false;
         }
@@ -257,10 +336,10 @@ private:
             file.read(reinterpret_cast<char*>(&current), sizeof(Record));
 
             if (record.code < current.code) {
-                search(current.left, record, file);
+                search(current.left, record);
             }
             else if (record.code > current.code) {
-                search(current.right, record, file);
+                search(current.right, record);
             }
             else if (record.code == current.code) {
                 return true;
@@ -268,7 +347,7 @@ private:
         }
     }
 
-    int minValue(int pos, fstream& file) {
+    int minValue(int pos) {
         if (pos == -1) {
             throw invalid_argument("The tree is empty");
         }
@@ -281,11 +360,11 @@ private:
             return current.code;
         }
         else {
-            return minValue(current.left, file);
+            return minValue(current.left);
         }
     }
 
-    int maxValue(int pos, fstream& file) {
+    int maxValue(int pos) {
         if (pos == -1) {
             throw invalid_argument("The tree is empty");
         }
@@ -298,11 +377,19 @@ private:
             return current.code;
         }
         else {
-            return maxValue(current.right, file);
+            return maxValue(current.right);
         }
     }
 
-    int size(int pos, fstream& file) {
+    bool isBalanced(int pos) {
+        Record record = getRecordByPos(pos);
+        if (pos == -1 || (balancingFactor(record) >= -1 && balancingFactor(record) <= 1)) {
+            return true;
+        }
+        return false;
+    }
+
+    int size(int pos) {
         if (pos == -1) {
             return 0;
         }
@@ -311,138 +398,8 @@ private:
             file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
             file.read(reinterpret_cast<char*>(&current), sizeof(Record));
 
-            return 1 + size(current.left, file) + size(current.right, file);
+            return 1 + size(current.left) + size(current.right);
         }
-    }
-
-public:
-    void add(Record record) {
-        fstream file(file_name, ios::binary | ios::in | ios::out);
-
-        Record parent_record;
-        add(root, parent_record, record, file);
-        writeFileRoot(file);
-
-        file.close();
-    }
-
-    int height() {
-        return height(root);
-    }
-
-    int minValue() {
-        fstream file(file_name, ios::binary | ios::in | ios::out);
-        return minValue(root, file);
-    }
-
-    int maxValue() {
-        fstream file(file_name, ios::binary | ios::in | ios::out);
-        return maxValue(root, file);
-    }
-
-    bool isBalanced() {
-        return isBalanced(root);
-    }
-
-    int size() {
-        fstream file(file_name, ios::binary | ios::in);
-        return size(root, file);
-    }
-
-//    gpt remove
-//    bool remove(int delete_key) {
-//        fstream file(file_name, ios::binary | ios::in | ios::out);
-//
-//        bool removed = remove(root, Record{}, delete_key, file);
-//        writeFileRoot(file);
-//
-//        file.close();
-//
-//        return removed;
-//    }
-//
-//    bool remove(int& pos, Record parent_current, int delete_key, fstream& file) {
-//        if (pos == -1) {
-//            return false;
-//        }
-//        else {
-//            Record current;
-//            file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
-//            file.read(reinterpret_cast<char*>(&current), sizeof(Record));
-//
-//            if (delete_key < current.code) {
-//                if (remove(current.left, current, delete_key, file)) {
-//                    // The key was found and removed in the left subtree
-//                    updateHeight(current);
-//                    balance(current, parent_current, file);
-//
-//                    if (parent_last_rotated_node1 != current.pos && parent_last_rotated_node2 != current.pos) {
-//                        writeRecord(current);
-//                    }
-//                    else {
-//                        if (parent_last_rotated_node1 != -1 && parent_last_rotated_node1 == current.pos) {
-//                            parent_last_rotated_node1 = -1;
-//                        }
-//                        else if (parent_last_rotated_node2 != -1 && parent_last_rotated_node2 == current.pos) {
-//                            parent_last_rotated_node2 = -1;
-//                        }
-//                    }
-//                }
-//                return true;
-//            }
-//            else if (delete_key > current.code) {
-//                if (remove(current.right, current, delete_key, file)) {
-//                    // The key was found and removed in the right subtree
-//                    updateHeight(current);
-//                    balance(current, parent_current, file);
-//
-//                    if (parent_last_rotated_node1 != current.pos && parent_last_rotated_node2 != current.pos) {
-//                        writeRecord(current);
-//                    }
-//                    else {
-//                        if (parent_last_rotated_node1 != -1 && parent_last_rotated_node1 == current.pos) {
-//                            parent_last_rotated_node1 = -1;
-//                        }
-//                        else if (parent_last_rotated_node2 != -1 && parent_last_rotated_node2 == current.pos) {
-//                            parent_last_rotated_node2 = -1;
-//                        }
-//                    }
-//                }
-//                return true;
-//            }
-//            else {
-//                // Key found, mark as deleted
-//                current.deleted = true;
-//                writeRecord(current);
-//
-//                // Return true to indicate removal
-//                return true;
-//            }
-//        }
-//    }
-
-    //    bool remove(int remove_key) {
-    //        fstream file(file_name, ios::binary | ios::in | ios::out);
-    //
-    //        // buscar si es que existe la remove key
-    //        // si es que existe proseguir
-    //        // si es que no retornar que no es posible realizar el remove
-    //
-    //        Record current = getRecordByPos(root);
-    //        Record current_parent{};
-    //        return remove(current, current_parent, remove_key, file);
-    //    }
-
-    bool search(Record record) {
-        fstream file(file_name, ios::binary | ios::in | ios::out);
-        return search(root, record, file);
-    }
-
-    vector<Record> rangeSearch(int begin_key, int end_key) {
-        vector<Record> records;
-        rangeSearch(root, records, begin_key, end_key);
-
-        return records;
     }
 
     void rangeSearch(int pos, vector<Record>& records, int& begin_key, int& end_key) {
@@ -460,38 +417,6 @@ public:
 
         rangeSearch(current.right, records, begin_key, end_key);
     }
-
-    bool isBalanced(int pos) {
-        Record record = getRecordByPos(pos);
-        if (pos == -1 || (balancingFactor(record) >= -1 && balancingFactor(record) <= 1)) {
-            return true;
-        }
-        return false;
-    }
-
-    //    bool remove(Record& current, Record current_parent, int remove_key, fstream& file) {
-    //        if (current.pos == -1) {
-    //            return false;
-    //        }
-    //
-    //        if (remove_key < current.code) {
-    //            Record current_left = getRecordByPos(current.left);
-    //
-    //            remove(current_left, current, remove_key, file);
-    //            writeRecord(current);
-    //
-    //            updateHeight(current);
-    //            balance(current, current_parent, file);
-    //        }
-    //        else if (remove_key > current.code) {
-    //            Record current_right = getRecordByPos(current.right);
-    //            remove(current_right, current, remove_key, file);
-    //            updateHeight(current);
-    //            balance(current, current_parent, file);
-    //        }
-    //        else {
-    //        }
-    //    }
 };
 
 #endif//PROYECTO1_BD2_AVLTREEFILE_H
