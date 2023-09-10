@@ -1,20 +1,23 @@
 #ifndef PROYECTO1_BD2_RECORD_H
 #define PROYECTO1_BD2_RECORD_H
 
-#include <iostream>
+#include "constants.h"
 
 using namespace std;
 
 struct Record {
-    int code;
+    // NORMAL
+    int code;  // key
     char name[12];
 
-    int pos = -1;
-    int left = -1;
-    int right = -1;
-
+    // AVL
+    int pos = NULL_POS;
+    int left = NULL_POS;
+    int right = NULL_POS;
     int height = 0;
-    int next_del = -2;  // no esta en la free list
+
+    // FREE LIST
+    int next_del = NOT_FL;  // no esta en la free list
     
     void showData() {
         cout << "pos: " << pos

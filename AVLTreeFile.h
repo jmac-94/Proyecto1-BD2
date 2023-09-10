@@ -3,8 +3,10 @@
 
 #include <cmath>
 #include <fstream>
+#include <iostream>
 #include <queue>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 
 #include "NodeBT.h"
@@ -25,11 +27,11 @@ private:
 
     // HEADER
     int root;
-    int first_deleted_record = -1;
+    int first_deleted_record;// -1: NULL_POS: end of list, -2: NOT_FL : not in FL, other_positive_number: in FL
 
     // FOR BALANCE
-    int parent_last_rotated_node1 = -1;
-    int parent_last_rotated_node2 = -1;
+    int parent_last_rotated_node1 = NULL_POS;
+    int parent_last_rotated_node2 = NULL_POS;
 
 public:
     explicit AVLTreeFile(string file_name) : file_name(std::move(file_name)) {
@@ -37,12 +39,13 @@ public:
 
         if (!in_file.is_open() | fileEmpty(in_file)) {
             ofstream out_file(this->file_name, ios::binary);
-            root = -1;
-            writeFileRoot(out_file);
+            root = NULL_POS;
+            first_deleted_record = NULL_POS;
+            writeFileHeader(out_file);
             out_file.close();
         }
         else {
-            root = readFileRoot(in_file);
+            std::tie(root, first_deleted_record) = readFileHeader(in_file);
         }
 
         in_file.close();
@@ -118,29 +121,40 @@ public:
 
 private:
     // FILE METHODS
-    void writeFileRoot(ofstream& out_file) {
-        out_file.seekp(0, ios::beg);
-        out_file.write(reinterpret_cast<char*>(&root), ROOT_SIZE);
-    }
-
     // Writes root_header to the file
     void writeFileRoot() {
         file.seekp(0, ios::beg);
         file.write(reinterpret_cast<char*>(&root), ROOT_SIZE);
     }
 
-    int readFileRoot(ifstream& in_file) {
-        in_file.seekg(0, ios::beg);
+    void writeFileHeader(ofstream& out_file) {
+        // ROOT
+        out_file.seekp(0, ios::beg);
+        out_file.write(reinterpret_cast<char*>(&root), ROOT_SIZE);
 
+        // FIRST_DELETED_RECORD
+        out_file.seekp(ROOT_SIZE, ios::beg);
+        out_file.write(reinterpret_cast<char*>(&first_deleted_record), FDR_SIZE);
+    }
+
+    // pair<root, first_deleted_record>
+    pair<int, int> readFileHeader(ifstream& in_file) {
+        // ROOT
         int file_root;
+        in_file.seekg(0, ios::beg);
         in_file.read(reinterpret_cast<char*>(&file_root), ROOT_SIZE);
 
-        return file_root;
+        // FIRST_DELETED_RECORD
+        int file_fdr;
+        in_file.seekg(ROOT_SIZE, ios::beg);
+        in_file.read(reinterpret_cast<char*>(&file_fdr), FDR_SIZE);
+
+        return make_pair(file_root, file_fdr);
     }
 
     // USES ITS OWN FILE
     Record getRecordByPos(int pos) {
-        if (pos == -1) {
+        if (pos == NULL_POS) {
             return Record{};
         }
 
@@ -148,7 +162,7 @@ private:
 
         Record record;
 
-        get_file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
+        get_file.seekg(HEADER_SIZE + pos * sizeof(Record), ios::beg);
         get_file.read(reinterpret_cast<char*>(&record), sizeof(Record));
 
         get_file.close();
@@ -160,7 +174,7 @@ private:
     void writeRecord(Record record) {
         fstream write_file(file_name, ios::binary | ios::in | ios::out);
 
-        write_file.seekp(ROOT_SIZE + record.pos * sizeof(Record), ios::beg);
+        write_file.seekp(HEADER_SIZE + record.pos * sizeof(Record), ios::beg);
         write_file.write(reinterpret_cast<char*>(&record), sizeof(Record));
 
         write_file.close();
@@ -168,9 +182,9 @@ private:
 
     // AVL-FILE STRUCTURE METHODS
     int add(int& pos, Record parent_current, Record& record) {
-        if (pos == -1) {
+        if (pos == NULL_POS) {
             file.seekg(0, ios::end);
-            pos = ((int) file.tellg() - (int) ROOT_SIZE) / (int) sizeof(Record);
+            pos = ((int) file.tellg() - (int) HEADER_SIZE) / (int) sizeof(Record);
             record.pos = pos;
 
             writeRecord(record);
@@ -179,7 +193,7 @@ private:
         }
         else {
             Record current;
-            file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
+            file.seekg(HEADER_SIZE + pos * sizeof(Record), ios::beg);
             file.read(reinterpret_cast<char*>(&current), sizeof(Record));
 
             if (record.code < current.code) {
@@ -196,11 +210,11 @@ private:
                 writeRecord(current);
             }
             else {
-                if (parent_last_rotated_node1 != -1 && parent_last_rotated_node1 == current.pos) {
-                    parent_last_rotated_node1 = -1;
+                if (parent_last_rotated_node1 != NULL_POS && parent_last_rotated_node1 == current.pos) {
+                    parent_last_rotated_node1 = NULL_POS;
                 }
-                else if (parent_last_rotated_node2 != -1 && parent_last_rotated_node2 == current.pos) {
-                    parent_last_rotated_node2 = -1;
+                else if (parent_last_rotated_node2 != NULL_POS && parent_last_rotated_node2 == current.pos) {
+                    parent_last_rotated_node2 = NULL_POS;
                 }
             }
 
@@ -209,8 +223,8 @@ private:
     }
 
     int height(int pos) {
-        if (pos == -1) {
-            return -1;
+        if (pos == NULL_POS) {
+            return NULL_POS;
         }
 
         Record record = getRecordByPos(pos);
@@ -230,7 +244,7 @@ private:
         // Left subtree is higher. Right rotation required.
         if (balancingFactor(record) >= 2) {
             // If child's right subtree is higher, rotate such node to the left.
-            if (balancingFactor(getRecordByPos(record.left)) <= -1) {
+            if (balancingFactor(getRecordByPos(record.left)) <= NULL_POS) {
                 Record left_record = getRecordByPos(record.left);
                 parent_last_rotated_node1 = left_rota(left_record, record);
             }
@@ -247,7 +261,7 @@ private:
     }
 
     int left_rota(Record& record, Record& parent_record) {
-        if (record.right != -1) {
+        if (record.right != NULL_POS) {
             Record right_record = getRecordByPos(record.right);
 
             record.right = right_record.left;
@@ -283,11 +297,11 @@ private:
             return parent_record.pos;
         }
 
-        return -1;
+        return NULL_POS;
     }
 
     int right_rota(Record& record, Record& parent_record) {
-        if (record.left != -1) {
+        if (record.left != NULL_POS) {
             Record left_record = getRecordByPos(record.left);
 
             record.left = left_record.right;
@@ -305,7 +319,7 @@ private:
             writeRecord(record);
             writeRecord(left_record);
 
-            if (parent_record.pos != record.pos && parent_record.pos != left_record.pos && parent_record.pos != -1) {
+            if (parent_record.pos != record.pos && parent_record.pos != left_record.pos && parent_record.pos != NULL_POS) {
                 if (parent_record.left == record.pos) {
                     parent_record.left = left_record.pos;
                 }
@@ -323,16 +337,16 @@ private:
             return parent_record.pos;
         }
 
-        return -1;
+        return NULL_POS;
     }
 
     bool search(int pos, Record record) {
-        if (pos == -1) {
+        if (pos == NULL_POS) {
             return false;
         }
         else {
             Record current;
-            file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
+            file.seekg(HEADER_SIZE + pos * sizeof(Record), ios::beg);
             file.read(reinterpret_cast<char*>(&current), sizeof(Record));
 
             if (record.code < current.code) {
@@ -348,15 +362,15 @@ private:
     }
 
     int minValue(int pos) {
-        if (pos == -1) {
+        if (pos == NULL_POS) {
             throw invalid_argument("The tree is empty");
         }
 
         Record current;
-        file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
+        file.seekg(HEADER_SIZE + pos * sizeof(Record), ios::beg);
         file.read(reinterpret_cast<char*>(&current), sizeof(Record));
 
-        if (current.left == -1) {
+        if (current.left == NULL_POS) {
             return current.code;
         }
         else {
@@ -365,15 +379,15 @@ private:
     }
 
     int maxValue(int pos) {
-        if (pos == -1) {
+        if (pos == NULL_POS) {
             throw invalid_argument("The tree is empty");
         }
 
         Record current;
-        file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
+        file.seekg(HEADER_SIZE + pos * sizeof(Record), ios::beg);
         file.read(reinterpret_cast<char*>(&current), sizeof(Record));
 
-        if (current.right == -1) {
+        if (current.right == NULL_POS) {
             return current.code;
         }
         else {
@@ -383,19 +397,19 @@ private:
 
     bool isBalanced(int pos) {
         Record record = getRecordByPos(pos);
-        if (pos == -1 || (balancingFactor(record) >= -1 && balancingFactor(record) <= 1)) {
+        if (pos == NULL_POS || (balancingFactor(record) >= NULL_POS && balancingFactor(record) <= 1)) {
             return true;
         }
         return false;
     }
 
     int size(int pos) {
-        if (pos == -1) {
+        if (pos == NULL_POS) {
             return 0;
         }
         else {
             Record current;
-            file.seekg(ROOT_SIZE + pos * sizeof(Record), ios::beg);
+            file.seekg(HEADER_SIZE + pos * sizeof(Record), ios::beg);
             file.read(reinterpret_cast<char*>(&current), sizeof(Record));
 
             return 1 + size(current.left) + size(current.right);
@@ -403,7 +417,7 @@ private:
     }
 
     void rangeSearch(int pos, vector<Record>& records, int& begin_key, int& end_key) {
-        if (pos == -1) {
+        if (pos == NULL_POS) {
             return;
         }
 
