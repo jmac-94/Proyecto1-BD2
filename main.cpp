@@ -4,24 +4,25 @@
 
 using namespace std;
 
-void printRecords() {
-    fstream file("../init.bin", ios::binary | ios::in);
+void seekAllRecords() {
+    AVLTreeFile avlTreeFile("../init.bin");
 
-    Record records[11];
+    vector<Record> records = avlTreeFile.seekAll();
 
-    int header;
-    file.seekg(0, ios::beg);
-    file.read((char*) &header, ROOT_SIZE);
-
-    for (int i = 0; i < 11; i++) {
-        file.seekg(ROOT_SIZE + i * sizeof(Record), ios::beg);
-        file.read(reinterpret_cast<char*>(&records[i]), sizeof(Record));
+    cout << "Root: " << avlTreeFile.getRootPos() << endl;
+    for (auto& item: records) {
+        item.showData();
     }
+}
 
-    cout << "Root: " << header << "\n";
+void seekRecordsFreeList() {
+    AVLTreeFile avlTreeFile("../init.bin");
 
-    for (auto& record: records) {
-        record.showData();
+    vector<Record> records = avlTreeFile.seekFreeList();
+
+    cout << "Free List: " << endl;
+    for (auto& item: records) {
+        item.showData();
     }
 }
 
@@ -75,8 +76,8 @@ void testAdd() {
     r10.code = 300;
     r11.code = 200;
 
-    strcpy(r10.name, "Orlando");
-    strcpy(r11.name, "Neko");
+    strcpy(r10.name, "Samuel");
+    strcpy(r11.name, "Willy");
 
     avlTreeFile.add(r10);
     avlTreeFile.add(r11);
@@ -101,19 +102,25 @@ void testRangeSearch() {
     int end_key = 12;
     vector<Record> records = avlTreeFile.rangeSearch(begin_key, end_key);
 
-    for (auto & item: records) {
+    for (auto& item: records) {
         item.showData();
     }
-
 }
 
 void testRemove() {
+    AVLTreeFile avlTreeFile("../init.bin");
 
+    //    avlTreeFile.remove(300);
+    //    avlTreeFile.remove(200);
+    avlTreeFile.remove(78);
 }
 
 int main() {
-//    testAdd();
-//    printRecords();
+    //    testAdd();
+    testRemove();
+
+    seekAllRecords();
+    seekRecordsFreeList();
 
     return 0;
 }
