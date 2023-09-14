@@ -1,16 +1,17 @@
 #ifndef PROYECTO1_BD2_BUCKET_H
 #define PROYECTO1_BD2_BUCKET_H
 
+#include "AVLFile/NodeAVL.h"
+#include "constants.h"
 #include <bitset>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include "constants.h"
-#include "Record.h"
 using namespace std;
 
+template<typename TK>
 struct Bucket {
-    Record registros[FB];
+    NodeAVL<TK> registros[FB];
     int count;
     int next;
     Bucket () {

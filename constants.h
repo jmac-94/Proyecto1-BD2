@@ -14,4 +14,4 @@ int NOT_FL = -2;
 
 #define FB 3
 
-#endif //PROYECTO1_BD2_CONSTANTS_H
+#endif//PROYECTO1_BD2_CONSTANTS_H
