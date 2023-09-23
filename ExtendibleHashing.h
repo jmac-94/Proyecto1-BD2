@@ -9,7 +9,7 @@ class Record {
 private:
     long key;
     long next;
-    string* data;
+    char* data;
 public:
 
     Record(){};
@@ -25,15 +25,20 @@ public:
     void serialization(string object);
 
     void print() {
-        cout << "KEY: " << this->key << " Data: " << *this->data << endl;
+        cout << "KEY: " << this->key << " Data: " << sizeof(this->data)/sizeof(char) << endl;
     }; // print Record Data
     void input() { // initialize from input
         cout << "Ingresar key (ID): "; cin >> this->key;
 
-        string s;
-        cout << "Data: "; cin >> s;
 
-        this->data = new string(s);
+        string dt;
+        cout << "Data: "; cin >> dt;
+
+        this->data = new char[dt.size()];
+
+        for (int i = 0; i < dt.size(); i++) {
+            this->data[i] = dt[i];
+        }
     }
 };
 
@@ -215,8 +220,8 @@ public:
         long bucketPos = searchIndex(key);
         while (bucketPos != -1) {
             Bucket<Record> bucket{};
-            std::fstream dataFile(_dataFile, std::ios::binary);
-            dataFile.seekg(bucketPos);
+            std::fstream dataFile(_dataFile, std::ios::binary | ios::in);
+            dataFile.seekg(bucketPos, ios::beg);
             dataFile.read((char *) &bucket, sizeof(bucket));
             dataFile.close();
             auto result = bucket.search(toPosition(key));

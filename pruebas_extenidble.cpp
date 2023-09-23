@@ -5,14 +5,16 @@ using namespace std;
 
 int main() {
 
-    ExtendibleHashing<long> Exp_Hashing("Expandible", 4);
+    ExtendibleHashing<long> Exp_Hashing("Expandible");
 
-    for (int i = 0; i < 5; i++) {
-        Record r1{};
-        r1.input();
-        Exp_Hashing.insert(r1.getKey(), r1);
-    }
+    // for (int i = 0; i < 5; i++) {
+    //     Record r1{};
+    //     r1.input();
+    //     Exp_Hashing.insert(r1.getKey(), r1);
+    // }
 
+
+    // Exp_Hashing.remove(3);
 
     pair<bool, Record> srch = Exp_Hashing.search(3);
 
