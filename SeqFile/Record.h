@@ -13,10 +13,6 @@ public:
     int next_record_pos = -1;
     bool is_deleted = false;
 
-    Record() = default;
-
-    Record(int id, std::string name, std::string lastname);
-
     std::string toString();
 };
 
