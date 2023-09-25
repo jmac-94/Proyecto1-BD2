@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
@@ -9,6 +10,8 @@ struct Record {
     char title[200];
     char authors[800];
     float average_rating;
+
+    bool is_deleted = false;
 
     // Hash
     long next;
@@ -62,4 +65,12 @@ struct Record {
         cout << "================================================================" << endl;
         cout << endl;
     }
+
+    std::string toString() {
+        std::stringstream ss;
+        ss << bookID << ", " << this->bookID << ", " << this->title << ", " << this->next;
+
+        return ss.str();
+    }
 };
+

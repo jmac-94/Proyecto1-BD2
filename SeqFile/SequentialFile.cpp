@@ -44,7 +44,7 @@ void SequentialFile::insertRecord(Record record_to_insert) {
                     return;
                 }
                 else {
-                    record_to_insert.next_record_pos = 0;
+                    record_to_insert.next = 0;
                     writeRecordInAuxFile(record_to_insert);
                     aux_file_count += 1;
                     writeCurrentMetadata();
@@ -97,9 +97,9 @@ void SequentialFile::insertRecord(Record record_to_insert) {
             }
 
             if (there_is_a_direct_prev) {
-                int prev_record_in_aux_old_next_record_pos = prev_record_in_aux.next_record_pos;
-                record_to_insert.next_record_pos = prev_record_in_aux_old_next_record_pos;
-                prev_record_in_aux.next_record_pos = data_file_count + aux_file_count;
+                int prev_record_in_aux_old_next_record_pos = prev_record_in_aux.next;
+                record_to_insert.next = prev_record_in_aux_old_next_record_pos;
+                prev_record_in_aux.next = data_file_count + aux_file_count;
                 writeRecordInAuxFile(record_to_insert);
                 updateRecordInAuxFile(prev_record_in_aux, prev_record_in_aux_pos);
                 aux_file_count += 1;
@@ -107,7 +107,7 @@ void SequentialFile::insertRecord(Record record_to_insert) {
             }
             else {
                 if (data_file_count == 0) {
-                    record_to_insert.next_record_pos = next_record_in_aux_pos;
+                    record_to_insert.next = next_record_in_aux_pos;
                     writeRecordInAuxFile(record_to_insert);
                     aux_file_count += 1;
                     writeCurrentMetadata();
@@ -117,10 +117,10 @@ void SequentialFile::insertRecord(Record record_to_insert) {
                     readRecordFromMainFile(next_record_in_data, 0);
 
                     if (next_record_in_aux.bookID < next_record_in_data.bookID) {
-                        record_to_insert.next_record_pos = next_record_in_aux_pos;
+                        record_to_insert.next = next_record_in_aux_pos;
                     }
                     else {
-                        record_to_insert.next_record_pos = 0;
+                        record_to_insert.next = 0;
                     }
 
                     writeRecordInAuxFile(record_to_insert);
@@ -136,13 +136,13 @@ void SequentialFile::insertRecord(Record record_to_insert) {
             while (true) {
                 Record prev_record_in_data_next;
 
-                if (prev_record_in_data.next_record_pos == -1) {
+                if (prev_record_in_data.next == -1) {
                     break;
                 }
 
-                readRecordFromMainFile(prev_record_in_data_next, prev_record_in_data.next_record_pos);
+                readRecordFromMainFile(prev_record_in_data_next, prev_record_in_data.next);
                 if (prev_record_in_data_next.bookID < record_to_insert.bookID) {
-                    prev_record_in_data_pos = prev_record_in_data.next_record_pos;
+                    prev_record_in_data_pos = prev_record_in_data.next;
                     prev_record_in_data = prev_record_in_data_next;
                 }
                 else {
@@ -150,9 +150,9 @@ void SequentialFile::insertRecord(Record record_to_insert) {
                 }
             }
 
-            int prev_record_in_data_old_next = prev_record_in_data.next_record_pos;
-            record_to_insert.next_record_pos = prev_record_in_data_old_next;
-            prev_record_in_data.next_record_pos = data_file_count + aux_file_count;
+            int prev_record_in_data_old_next = prev_record_in_data.next;
+            record_to_insert.next = prev_record_in_data_old_next;
+            prev_record_in_data.next = data_file_count + aux_file_count;
 
             writeRecordInMainFile(prev_record_in_data, prev_record_in_data_pos);
             writeRecordInAuxFile(record_to_insert);
@@ -240,15 +240,15 @@ void SequentialFile::reestructureFile() {
     for (int i = 0; i < data_file_count + aux_file_count; ++i) {
         Record real_first_record_correct_next = real_first_record;
         if (i == data_file_count + aux_file_count - 1) {
-            real_first_record_correct_next.next_record_pos = -1;
+            real_first_record_correct_next.next = -1;
         }
         else {
-            real_first_record_correct_next.next_record_pos = i + 1;
+            real_first_record_correct_next.next = i + 1;
         }
 
         new_main.seekp(i * sizeof(Record), std::ios::beg);
         new_main.write((char*) &real_first_record_correct_next, sizeof(Record));
-        readRecordFromMainFile(real_first_record, real_first_record.next_record_pos);
+        readRecordFromMainFile(real_first_record, real_first_record.next);
     }
     new_main.close();
 
