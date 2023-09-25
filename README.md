@@ -68,5 +68,6 @@ En esta técnica el archivo se almacena uno tras otro de forma secuancial. Esta 
 
 | Command | Description | Complexity |
 | --- | --- | --- |
-| Insert | Si hay espacio en el archivo auxiliar, se busca la posición adecuada y se inserta. Si no hay espacio en el archivo auxiliar se reorganiza el archivo y se intenta nuevamente la iserción.| O(n) |
-| RangeSearch | En el Sequential File al estar ordenado los registros es más conveniente realizar la búsqueda binaria para realizar una búsqueda específica o por rangos. | O(log n) |
+| Insert | La inserción en el espacio auxiliar siempre será constante, sin embargo, si no hay espacio, se tendrá que reestructurar el archivo en tiempo lineal. | Principal: O(n), Auxiliar: O(1) |
+| Search | Al estar el archivo principal ordenado, podemos usar búsqueda binaria para encontrar el record en tiempo logarítmico, mientras que si está en el archivo auxiliar, esto se convertirá en tiempo lineal | Principal: O(lgn), Auxiliar: O(n) |
+| RangeSearch | Al igual que la búsqueda específica, la búsqueda por rango demorará tiempo logarítmico si el record se encuentra en el espacio principal o lineal si está en el auxiliar. Después de esto, se podrá encontrar los siguientes records dentro del rango en tiempo lineal. | Principal: O(n), Auxiliar: O(n) |
