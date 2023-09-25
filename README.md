@@ -139,7 +139,8 @@ SELECT between:
 INSERT:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
 | --- | --- | --- |
-| AVL | 358 | O(lgn)  |
+| AVL | 358 | O(lgn) |
+| Extendible Hash | 73 | O(1) |
 
 DELETE:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
