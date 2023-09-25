@@ -49,7 +49,7 @@ n es el número de nodos en el AVL File y k el número de nodos en el rango que 
 | --- | --- | --- |
 | Add | Se desciende en el árbol y se ubica adecuadamente el registro; luego, se verifica si el árbol está balanceado. Si no lo está, se realizan rotaciones.| O(logn) |
 | Search | Se desciende en el árbol. Si se logra ubicar en un registro con igual key a la buscada se retorna true, sino false. | O(logn) |
-| RangeSearch | Se desciende recursivamente el subárbol izquierdo y derecho y se almacenan los nodos que se encuentren dentro del rango en el vector Records. | O(k + logn) |
+| RangeSearch | Se desciende recursivamente el subárbol izquierdo y derecho y se almacenan los nodos que se encuentren dentro del rango en el vector Records. | O(n) |
 | Remove | Se desciende en el árbol buscando la key que se desee eliminar y la cual se ha pasado como parámetro, si se encuentra, se realiza la eliminación y si no se encuentra retorna false. | O(logn) |
 
 ## Extendible Hashing
