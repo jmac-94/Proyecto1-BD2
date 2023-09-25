@@ -108,7 +108,7 @@ Reserved words:
 - and
 - between
 - table
-- *
+- \*
 - using
 - file
 - into
