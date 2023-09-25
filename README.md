@@ -146,3 +146,9 @@ DELETE:
 | AVL | 281 | O(lgn) |
 
 ## Análisis de resultados y conclusiones
+
+- Se ha culminado exitosamente la implementación de tres estructuras: AVL File, Extendible Hashing y Sequential File.
+- Luego de evaluaciones de rendimiento, es evidente que cada técnica presenta sus propias fortalezas y debilidades en relación a los tiempos de búsqueda, inserción y eliminación.
+- Se ha conseguido una integración efectiva de conjuntos de datos desde un archivo .csv hacia nuestros objetos, evidenciando su aplicabilidad en entornos externos.
+- Se ha incorporado un Parser SQL que permite realizar consultas mediante los comandos SQL, optimizando la experiencia de consulta.
+- Se ha diseñado e implementado una interfaz gráfica de usuario (GUI) que no solo capitaliza las estructuras desarrolladas, sino que también garantiza una interacción intuitiva y amigable para el usuario.
