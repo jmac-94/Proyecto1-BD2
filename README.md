@@ -42,6 +42,8 @@ Para nuestro proyecto, realizamos las siguientes tres estructuras de datos:
 
 El AVL File es la implementación de el árbol de búsqueda binaria auto balanceado que funciona para almacenar registros de memoria secundaria. Nuestra implementación admite insert, range search y remove.
 
+![](https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.sahinarslan.tech%2Fposts%2Fdeep-dive-into-data-structures-using-javascript-avl-tree%2F&psig=AOvVaw007yMgl7PRLIVosJao1AiX&ust=1695734583950000&source=images&cd=vfe&opi=89978449&ved=0CBAQjRxqFwoTCJCg-d7txYEDFQAAAAAdAAAAABAD)
+
 n es el número de nodos en el AVL File y k el número de nodos en el rango que se busca 
 
 | Command | Description | Complexity |
