@@ -3,3 +3,5 @@
 *.docx
 CMakeLists.txt
 cmake-build-debug/
+*/*.bin
+*/*.out
