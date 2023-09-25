@@ -6,7 +6,7 @@ Este proyecto tiene la finalidad de crear un gestor dado un dataset y realizar o
 
 ## Objetivo principal
 
-- El objetivo principal del proyecto es Comprender y aplicar técnicas de almacenamiento de archivos físicos.
+- El objetivo principal del proyecto es comprender y aplicar técnicas de almacenamiento de archivos físicos.
 
 ## Objetivos secundarios
 
@@ -17,7 +17,7 @@ Este proyecto tiene la finalidad de crear un gestor dado un dataset y realizar o
 
 ## Descripción del dominio de datos
 
-Hemos usado una base de datos obtenida de Kaggle que cuenta con información sobre 11 000 libros. Se eligió este dominio de datos por su fácil implementación con nuestras estructuras y por contar con columnas de datos únicos, como puede ser el ISBN, title, average rating, etc.
+Hemos usado una base de datos obtenida de Kaggle que cuenta con información sobre 11000 libros. Se eligió este dominio de datos por su fácil implementación con nuestras estructuras y por contar con columnas de datos únicos, como puede ser el ISBN, title, average rating, etc.
 
 Atributos:
 
@@ -64,7 +64,7 @@ Creación de buckets con código hash para almacenar registros en la memoria sec
 
 ## Sequential File
 
-En esta técnica el archivo se almacena uno tras otro de forma secuancial. Esta implementación admite Insert y search.
+Técnica que almacena los nuevos records en un espacio auxiliar, que será reestructurado una vez este pase un cierto límite de espacio. Aprovecha que los records principales están ordenados bajo el key para realizar operaciones en tiempo logarítmico.
 
 | Command | Description | Complexity |
 | --- | --- | --- |
