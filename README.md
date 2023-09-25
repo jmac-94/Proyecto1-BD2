@@ -89,7 +89,8 @@ Cada uno de estos métodos lee la consulta y por cada token obtenido va haciendo
 
 A continuación se mostrará las consultas que soporta nuestro parser.
 
-| Consulta | Query |
+| Consulta | Query string |
+| --- | --- |
 | CREATE | create table books_avl from file "data.csv" using index avl("bookID"); |
 | INSERT | insert into books_avl values(55555, Libro, Josue/Gabriel/Nico/Max, 4.2); |
 | SELECT equals | select * from books_avl where bookID = 2 |
@@ -116,26 +117,31 @@ Reserved words:
 ## Resultados experimentales
 CREATE:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
+| --- | --- | --- |
 | AVL | 2448700 | O(n) |
 | Extendible Hash | 5931850 | O(n) |
 | Sequential | 143483000 | O(n) |
 
 SELECT equals:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
+| --- | --- | --- |
 |  AVL | 2557 | O(lgn) |
 | Extendible Hash | 132  | O(1) |
 | Sequential | 1588 | O(logn + k) |
 
 SELECT between:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
+| --- | --- | --- |
 | AVL | 59690 | O(n) |
 | Sequential | 15415 | O(logn) |
 
 INSERT:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
+| --- | --- | --- |
 | AVL | 358 | O(lgn)  |
 
 DELETE:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
+| --- | --- | --- |
 
 ## Análisis de resultados y conclusiones
