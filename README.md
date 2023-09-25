@@ -126,14 +126,15 @@ SELECT equals:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
 | --- | --- | --- |
 |  AVL | 2557 | O(lgn) |
-| Extendible Hash | 132  | O(1) |
 | Sequential | 1588 | O(logn + k) |
+| Extendible Hash | 132  | O(1) |
 
 SELECT between:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
 | --- | --- | --- |
 | AVL | 59690 | O(n) |
 | Sequential | 15415 | O(logn) |
+| Extendible Hash | 312 | O(n) |
 
 INSERT:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
