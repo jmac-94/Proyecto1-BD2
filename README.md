@@ -143,5 +143,6 @@ INSERT:
 DELETE:
 | Índice | Tiempo de ejecución (ms) | Accesos a disco duro |
 | --- | --- | --- |
+| AVL | 281 | O(lgn) |
 
 ## Análisis de resultados y conclusiones
