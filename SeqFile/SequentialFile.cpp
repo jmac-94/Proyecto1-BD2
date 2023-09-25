@@ -61,7 +61,7 @@ void SequentialFile::insertRecord(Record record_to_insert) {
                 Record i_record;
                 readRecordFromAuxFile(i_record, i);
 
-                if (i_record.id < record_to_insert.id) {
+                if (i_record.bookID < record_to_insert.bookID) {
                     there_is_a_direct_prev = true;
                     prev_record_in_aux = i_record;
                     prev_record_in_aux_pos = i;
@@ -74,7 +74,7 @@ void SequentialFile::insertRecord(Record record_to_insert) {
                     Record i_record;
                     readRecordFromAuxFile(i_record, i);
 
-                    if (i_record.id < record_to_insert.id && i_record.id > prev_record_in_aux.id) {
+                    if (i_record.bookID < record_to_insert.bookID && i_record.bookID > prev_record_in_aux.bookID) {
                         prev_record_in_aux = i_record;
                         prev_record_in_aux_pos = i;
                         there_is_a_direct_prev = true;
@@ -90,7 +90,7 @@ void SequentialFile::insertRecord(Record record_to_insert) {
                 Record i_record;
                 readRecordFromAuxFile(i_record, i);
 
-                if (i_record.id > record_to_insert.id && i_record.id <= next_record_in_aux.id) {
+                if (i_record.bookID > record_to_insert.bookID && i_record.bookID <= next_record_in_aux.bookID) {
                     next_record_in_aux = i_record;
                     next_record_in_aux_pos = i + data_file_count;
                 }
@@ -116,7 +116,7 @@ void SequentialFile::insertRecord(Record record_to_insert) {
                     Record next_record_in_data;
                     readRecordFromMainFile(next_record_in_data, 0);
 
-                    if (next_record_in_aux.id < next_record_in_data.id) {
+                    if (next_record_in_aux.bookID < next_record_in_data.bookID) {
                         record_to_insert.next_record_pos = next_record_in_aux_pos;
                     }
                     else {
@@ -141,7 +141,7 @@ void SequentialFile::insertRecord(Record record_to_insert) {
                 }
 
                 readRecordFromMainFile(prev_record_in_data_next, prev_record_in_data.next_record_pos);
-                if (prev_record_in_data_next.id < record_to_insert.id) {
+                if (prev_record_in_data_next.bookID < record_to_insert.bookID) {
                     prev_record_in_data_pos = prev_record_in_data.next_record_pos;
                     prev_record_in_data = prev_record_in_data_next;
                 }
@@ -173,7 +173,7 @@ int SequentialFile::binSearchPrevPos(Record record, int low, int high) {
         Record i_record;
         readRecordFromMainFile(i_record, i);
 
-        if (i_record.id < record.id) {
+        if (i_record.bookID < record.bookID) {
             pos = i;
         }
     }
@@ -201,7 +201,7 @@ void SequentialFile::reestructureFile() {
         Record i_record;
         readRecordFromMainFile(i_record, i);
 
-        if (i_record.id < first_record_in_data.id && !i_record.is_deleted) {
+        if (i_record.bookID < first_record_in_data.bookID && !i_record.is_deleted) {
             first_record_in_data = i_record;
             first_record_in_data_pos = i;
         }
@@ -216,7 +216,7 @@ void SequentialFile::reestructureFile() {
         Record i_record;
         readRecordFromAuxFile(i_record, i);
 
-        if (i_record.id < first_record_in_aux.id && !i_record.is_deleted) {
+        if (i_record.bookID < first_record_in_aux.bookID && !i_record.is_deleted) {
             first_record_in_aux = i_record;
             first_record_in_aux_pos = i;
         }
@@ -225,7 +225,7 @@ void SequentialFile::reestructureFile() {
     Record real_first_record;
     int real_first_record_pos;
 
-    if (data_file_count == 0 || first_record_in_aux.id < first_record_in_data.id) {
+    if (data_file_count == 0 || first_record_in_aux.bookID < first_record_in_data.bookID) {
         real_first_record = first_record_in_aux;
         real_first_record_pos = first_record_in_aux_pos;
     }
@@ -319,11 +319,11 @@ int SequentialFile::binSearch(int id) {
         Record mid_record;
         readRecordFromMainFile(mid_record, m);
 
-        if (mid_record.id == id) {
+        if (mid_record.bookID == id) {
             return m;
         }
 
-        if (mid_record.id < id) {
+        if (mid_record.bookID < id) {
             l = m + 1;
         }
         else {
@@ -338,7 +338,7 @@ int SequentialFile::seqSearch(int id) {
     for (int i = 0; i < aux_file_count; ++i) {
         Record i_record;
         readRecordFromAuxFile(i_record, i);
-        if (i_record.id == id) {
+        if (i_record.bookID == id) {
             return i;
         }
     }
@@ -359,7 +359,7 @@ std::vector<Record> SequentialFile::rangeSearchRecords(int id_low, int id_high) 
     for (int i = 0; i < aux_file_count; i++) {
         Record i_record;
         readRecordFromAuxFile(i_record, i);
-        if (i_record.id >= id_low && i_record.id <= id_high) {
+        if (i_record.bookID >= id_low && i_record.bookID <= id_high) {
             result.push_back(i_record);
         }
     }
@@ -446,7 +446,7 @@ int SequentialFile::lowerBound(int x) {
         Record m_record;
         readRecordFromMainFile(m_record, m);
 
-        if (m_record.id >= x) {
+        if (m_record.bookID >= x) {
             ans = m;
             r = m - 1;
         }
@@ -466,7 +466,7 @@ int SequentialFile::upperBound(int x) {
         Record m_record;
         readRecordFromMainFile(m_record, m);
 
-        if (m_record.id <= x) {
+        if (m_record.bookID <= x) {
             l = m + 1;
         }
         else {

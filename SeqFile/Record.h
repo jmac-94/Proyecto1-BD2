@@ -6,7 +6,7 @@
 
 class Record {
 public:
-    int id{};
+    int bookID{};
     char name[10]{'\0'};
     char last_name[10]{'\0'};
 
