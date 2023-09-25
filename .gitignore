@@ -2,6 +2,7 @@
 *.doc
 *.docx
 CMakeLists.txt
+CMakeLists.txt.user
 cmake-build-debug/
 */*.bin
 */*.out

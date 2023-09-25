@@ -1,3 +1,6 @@
+#ifndef EXTENDIBLEHASHINGBUCKET_H
+#define EXTENDIBLEHASHINGBUCKET_H
+
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -53,7 +56,7 @@ public:
 
         cout << "NEXT: " << this->_next << endl;
 
-        cout << "Values: " << endl; 
+        cout << "Values: " << endl;
         for (int i  = 0; i < this->_size; i++) {
             cout << this->_values[i].first << " ";
         }
@@ -61,3 +64,5 @@ public:
         cout << endl;
     }
 };
+
+#endif // EXTENDIBLEHASHINGBUCKET_H

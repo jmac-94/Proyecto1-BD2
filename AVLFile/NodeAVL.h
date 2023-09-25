@@ -1,8 +1,9 @@
-#ifndef PROYECTO1_BD2_NODEAVL_H
-#define PROYECTO1_BD2_NODEAVL_H
+#ifndef NODEAVL_H
+#define NODEAVL_H
 
-#include "../constants.h"
 #include <cstring>
+
+#include "../ExtendibleHashing/Record.h"
 
 using namespace std;
 
@@ -10,7 +11,7 @@ template<typename TK>
 struct NodeAVL {
     // NORMAL
     TK key{};  // key
-    char name[12]{};
+    Record record;
 
     // AVL
     int pos;
@@ -19,18 +20,31 @@ struct NodeAVL {
     int height = 0;
 
     // FREE LIST
-    int next_del = NOT_FL;  // no esta en la free list
+    int next_del = -2;  // no esta en la free list
 
     NodeAVL() {
-        pos = NULL_POS;
-        left = NULL_POS;
-        right = NULL_POS;
+        pos = -1;
+        left = -1;
+        right = -1;
         height = 0;
+    }
+
+    explicit NodeAVL(Record r) {
+        pos = -1;
+        left = -1;
+        right = -1;
+        height = 0;
+
+        record = r;
+
+        key = r.bookID;
     }
 
     NodeAVL(const NodeAVL<TK>& other) {
         key = other.key;
-        std::strcpy(name, other.name);
+
+        record = other.record;
+
         pos = other.pos;
         left = other.left;
         right = other.right;
@@ -40,13 +54,12 @@ struct NodeAVL {
 
     void copyAttributes(NodeAVL other) {
         key = other.key;
-        std::strcpy(name, other.name);
+        record = other.record;
     }
 
     void showData() {
         cout << "pos: " << pos
              << " || key: " << key
-             << " || name: " << name
              << " || left: " << left
              << " || right: " << right
              << " || height: " << height
@@ -54,4 +67,5 @@ struct NodeAVL {
     }
 };
 
-#endif//PROYECTO1_BD2_NODEAVL_H
+
+#endif // NODEAVL_H

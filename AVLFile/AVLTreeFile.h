@@ -1,5 +1,5 @@
-#ifndef PROYECTO1_BD2_AVLTREEFILE_HPP
-#define PROYECTO1_BD2_AVLTREEFILE_HPP
+#ifndef AVLTREEFILE_H
+#define AVLTREEFILE_H
 
 #include <cmath>
 #include <fstream>
@@ -10,17 +10,20 @@
 #include <tuple>
 #include <utility>
 
-#include "../constants.h"
 #include "NodeAVL.h"
 
 using namespace std;
 
-bool fileEmpty(ifstream& file) {
-    return file.peek() == ifstream::traits_type::eof();
-}
-
 template<typename TK>
 class AVLTreeFile {
+private:
+    std::streamsize ROOT_SIZE = sizeof(int);
+    std::streamsize FDR_SIZE = sizeof(int);
+    std::streamsize KEY_ATT_SIZE = sizeof(char[20]);
+    std::streamsize HEADER_SIZE = ROOT_SIZE + FDR_SIZE + KEY_ATT_SIZE;
+    int NULL_POS = -1;
+    int NOT_FL = -2;
+
 private:
     // FILE
     string file_name;
@@ -54,6 +57,11 @@ public:
     }
 
     ~AVLTreeFile() = default;
+
+    bool fileEmpty(ifstream& file) {
+        return file.peek() == ifstream::traits_type::eof();
+    }
+
 
     void add(NodeAVL<TK> record) {
         file.open(file_name, ios::binary | ios::in | ios::out);
@@ -103,19 +111,14 @@ public:
         return sz;
     }
 
-    bool search(TK key) {
+    NodeAVL<TK> search(TK key) {
         file.open(file_name, ios::binary | ios::in | ios::out);
 
         shared_ptr<NodeAVL<TK>> record = search(root, key);
 
         file.close();
 
-        if (record != nullptr) {
-            return record->key == key;
-        }
-        else {
-            return false;
-        }
+        return *record;
     }
 
     std::vector<NodeAVL<TK>> rangeSearch(int begin_key, int end_key) {
@@ -696,4 +699,4 @@ private:
     }
 };
 
-#endif//PROYECTO1_BD2_AVLTREEFILE_HPP
+#endif // AVLTREEFILE_H

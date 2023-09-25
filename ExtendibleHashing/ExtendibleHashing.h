@@ -1,5 +1,5 @@
-#ifndef PROYECTO1_BD2_EXTENDIBLEHASHING_H
-#define PROYECTO1_BD2_EXTENDIBLEHASHING_H
+#ifndef EXTENDIBLEHASHING_H
+#define EXTENDIBLEHASHING_H
 
 #include "ExtendibleHashingBucket.h"
 #include "Record.h"
@@ -84,7 +84,7 @@ class ExtendibleHashing {
             dataFile.write((char *) &bucket, sizeof(bucket));
         } else if (bucket._size == FB) {    // En caso de que este lleno
             if (bucket._localDepth == this->_globalDepth) { // Si dicho bucket ya alcanzo la profundidad global se encadena un nuevo bucket al final del archivo.
-                
+
                 dataFile.seekg(0, ios::end);
 
                 // Calculo la posicion del nuevo bucket a insertar, me muevo hacia ahi, inserto y escribo
@@ -139,7 +139,7 @@ class ExtendibleHashing {
 
 public:
     explicit ExtendibleHashing(const string &name) : _indexFile(name + "-HashIndex.bin"), _dataFile(name + "-HashData.bin"),
-                                                       _propertyFile(name + "-Depth.bin") {
+                                                     _propertyFile(name + "-Depth.bin") {
         fstream propertyFile(_propertyFile, ios::binary | ios::in | ios::out);
         if (!propertyFile.is_open()) throw invalid_argument("Cannot open property file.");
         propertyFile.read((char *) &_globalDepth, sizeof(int));
@@ -147,9 +147,9 @@ public:
     }
 
     explicit ExtendibleHashing(const string &name, int globalDepth) : _globalDepth(globalDepth),
-                                                                          _indexFile(name + "-HashIndex.bin"),
-                                                                          _dataFile(name + "-HashData.bin"),
-                                                                          _propertyFile(name + "-Depth.bin") {
+                                                                      _indexFile(name + "-HashIndex.bin"),
+                                                                      _dataFile(name + "-HashData.bin"),
+                                                                      _propertyFile(name + "-Depth.bin") {
         ofstream indexFile(_indexFile, ios::binary | ios::trunc | ios::out );
         if (!indexFile.is_open()) throw invalid_argument("Cannot open index file.");
 
@@ -193,7 +193,7 @@ public:
 
         fstream dataFile(this->_dataFile, ios::binary | ios::in);
         if (!dataFile.is_open()) throw invalid_argument("Cannot open data file.");
-        
+
         Bucket<Record> bucket;
 
         while (bucketPos != -1) {
@@ -229,7 +229,7 @@ public:
 
     void remove(KeyType key) {
         long bucketPos = getInitialBucketPosition(key);
-        
+
         Bucket<Record> bucket;
         fstream dataFile(_dataFile, ios::binary | ios::in | ios::out);
         if (!dataFile.is_open()) throw invalid_argument("Cannot open data file Remove.");
@@ -258,5 +258,4 @@ public:
     }
 };
 
-
-#endif//PROYECTO1_BD2_EXTENDIBLEHASHING_H
+#endif // EXTENDIBLEHASHING_H

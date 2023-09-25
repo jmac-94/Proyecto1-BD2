@@ -5,9 +5,10 @@
 #include <fstream>
 #include <iostream>
 #include <cstdio>
-#include "Record.h"
 #include <optional>
 #include <vector>
+
+#include "../ExtendibleHashing/Record.h"
 
 class SequentialFile {
 private:

@@ -1,5 +1,10 @@
+#ifndef RECORD_H
+#define RECORD_H
+
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <cstring>
 
 using namespace std;
 
@@ -10,10 +15,12 @@ struct Record {
     char authors[800];
     float average_rating;
 
+    bool is_deleted = false;
+
     // Hash
     long next;
 
-    Record(){};
+    Record() = default;
 
     void read(string fila) {
 
@@ -62,4 +69,13 @@ struct Record {
         cout << "================================================================" << endl;
         cout << endl;
     }
+
+    std::string toString() {
+        std::stringstream ss;
+        ss << bookID << ", " << this->bookID << ", " << this->title << ", " << this->next;
+
+        return ss.str();
+    }
 };
+
+#endif
