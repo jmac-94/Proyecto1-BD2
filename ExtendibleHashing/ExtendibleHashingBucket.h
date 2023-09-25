@@ -44,4 +44,20 @@ public:
         this->_values[this->_size - 1] = pair<long, Record>{};
         this->_size--;
     }
+
+    void print() {
+        cout << "Sizeof: " << sizeof(Bucket) << endl;
+        cout << "Local Depth: " << this->_localDepth << endl;
+        cout << "Bits: " << this->_bits << endl;
+        cout << "Size: " << this->_size << endl;
+
+        cout << "NEXT: " << this->_next << endl;
+
+        cout << "Values: " << endl; 
+        for (int i  = 0; i < this->_size; i++) {
+            cout << this->_values[i].first << " ";
+        }
+        cout << endl;
+        cout << endl;
+    }
 };

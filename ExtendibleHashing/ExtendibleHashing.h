@@ -19,83 +19,119 @@ class ExtendibleHashing {
     }
 
     long hash(long k) {
-        return k & ((1LL << _globalDepth) - 1);
+        return k & ((1LL << _globalDepth) - 1);             // k % (2 ^ _globalDepth)
     }
 
-    long searchIndex(long key) {                            // O(1)
-        long dataPos = hash(key) * sizeof(long);
+    long getInitialBucketPosition(long key) {                            // O(1)
+        long dataPos = hash(key) * sizeof(KeyType);
         fstream indexFile(_indexFile, ios::binary | ios::in);
         if (!indexFile.is_open()) throw invalid_argument("Cannot open index file");
-        indexFile.seekg(dataPos);
+        indexFile.seekg(dataPos, ios::beg);
         long bucketPos;
         indexFile.read((char *) &bucketPos, sizeof(bucketPos));
         indexFile.close();
         return bucketPos;
     }
 
-    long searchBucket(long bucketPos) {                     // O(log globalDepth())
+    long getLastBucket(long bucketPos) {                     // O(log globalDepth())
         fstream dataFile(_dataFile, ios::binary | ios::in);
         if (!dataFile.is_open()) throw invalid_argument("Cannot open data file");
+
+        Bucket<Record> bucket;
         while (bucketPos != -1) {
-            Bucket<Record> bucket{};
             dataFile.seekg(bucketPos, ios::beg);
             dataFile.read((char *) &bucket, sizeof(bucket));
-            if (bucket._size < FB || bucket._next == -1) break;
+            if (bucket._next == -1) break;
             bucketPos = bucket._next;
         }
+
         dataFile.close();
         return bucketPos;
     }
 
     void splitBucket(long bucket, long bits, int localDepth) {
-        fstream indexFile(_indexFile, ios::binary | ios::app | ios::in);
+        fstream indexFile(_indexFile, ios::binary | ios::in | ios::out);
         if (!indexFile.is_open()) throw invalid_argument("Cannot open index file");
-        long n = 1LL << (_globalDepth - localDepth);
+        long n = 1LL << this->_globalDepth;
         for (long i = 0; i < n; ++i) {
-            long j = (bits | (i << localDepth));
-            indexFile.seekg(j * sizeof(long));
-            indexFile.write((char *) &bucket, sizeof(bucket));
+            if ((i & ((1LL << localDepth) - 1)) == bits) {
+                indexFile.seekg(i * sizeof(long), ios::beg);
+                indexFile.write((char *) &bucket, sizeof(long));
+            }
         }
         indexFile.close();
     }
 
     void _insert(long key, Record record) {
-        long bucketPos = searchBucket(searchIndex(key));
+
+        // Obtengo el codigo hash de la llave y bajo hasta al ultimo bucket enlazado.
+        long bucketPos = getLastBucket(getInitialBucketPosition(key));
+
+        // Abrimos el datafile
         fstream dataFile(_dataFile, ios::binary | ios::in | ios::out);
         if (!dataFile.is_open()) throw invalid_argument("Cannot open data file");
+
+        // Cargo el bucket de dicha posicion
         dataFile.seekg(bucketPos, ios::beg);
-        Bucket<Record> bucket{};
+        Bucket<Record> bucket;
         dataFile.read((char* ) &bucket, sizeof(bucket));
+
+        // Si el bucket aun tiene espacio, se inserta en dicho bucket y se escribe el en datafile
         if (bucket._size < FB) {
-            bucket._values[bucket._size++] = pair<long, Record>(toPosition(key), record);
+            bucket._values[bucket._size] = pair<long, Record>(key, record);
+            bucket._size++;
             dataFile.seekg(bucketPos, ios::beg);
             dataFile.write((char *) &bucket, sizeof(bucket));
-        } else if (bucket._size == FB) {
-            if (bucket._localDepth == FB) {
+        } else if (bucket._size == FB) {    // En caso de que este lleno
+            if (bucket._localDepth == this->_globalDepth) { // Si dicho bucket ya alcanzo la profundidad global se encadena un nuevo bucket al final del archivo.
+                
                 dataFile.seekg(0, ios::end);
+
+                // Calculo la posicion del nuevo bucket a insertar, me muevo hacia ahi, inserto y escribo
                 long newBucketPos = dataFile.tellg();
                 Bucket<Record> newBucket(bucket._localDepth, bucket._bits);
-                dataFile.write((char *) &newBucket, sizeof(newBucket));
+                newBucket._values[newBucket._size] = pair<KeyType, Record>(key, record);
+                newBucket._size++;
+                newBucket._next = -1;
+                dataFile.seekg(newBucketPos, ios::beg);
+                dataFile.write((char *) &newBucket, sizeof(Bucket<Record>));
+
+                // Enlazo el bucket actual al bucket nuevo, luego sobreescribo el bucket actual
                 bucket._next = newBucketPos;
                 dataFile.seekg(bucketPos, ios::beg);
-                dataFile.write((char *) &bucket, sizeof(bucket));
+                dataFile.write((char *) &bucket, sizeof(Bucket<Record>));
             } else {
+                // Se crea el nuevo bucket de profundidad local aumentada en 1 que contendra "1" + _bits y se calcula su posicion
                 Bucket<Record> newBucket(bucket._localDepth + 1, bucket._bits | (1LL << bucket._localDepth));
-                bucket._localDepth++;
-                vector<pair<long, Record>> values = {pair<long, Record>(key, record)};
-                for (int i = 0; i < bucket._size; ++i)
-                    values.push_back(bucket._values[i]);
-                bucket._size = 0;
-
-                dataFile.seekg(bucketPos, ios::beg);
-                dataFile.write((char *) &bucket, sizeof(bucket));
                 dataFile.seekg(0, ios::end);
                 long newBucketPos = dataFile.tellg();
-                dataFile.write((char *) &newBucket, sizeof(bucket));
+
+                // Se aumenta en uno la profundidad local
+                bucket._localDepth++;
+
+                // Creo un vector para saber que valores voy a tener que volver a agregar
+                vector<pair<KeyType, Record>> new_values_to_insert(bucket._size + 1);
+                for (int i = 0; i < bucket._size; ++i) {
+                    new_values_to_insert[i] = bucket._values[i];
+                }
+                new_values_to_insert[bucket._size] = pair<KeyType, Record> (key, record);
+
+                // "Vacio" el bucket actual
+                bucket._size = 0;
+
                 splitBucket(newBucketPos, newBucket._bits, newBucket._localDepth);
-                dataFile.close();
-                for (const auto &e: values)
-                    insert(e.first, e.second);
+
+                // Escribo el bucket modificado
+                dataFile.seekg(bucketPos, ios::beg);
+                dataFile.write((char *) &bucket, sizeof(Bucket<Record>));
+
+                // Escribo el nuevo bucket
+                dataFile.seekg(newBucketPos, ios::beg);
+                dataFile.write((char *) &newBucket, sizeof(Bucket<Record>));
+
+                for (auto& v: new_values_to_insert) {
+                    this->insert(v.first, v.second);
+                }
             }
         }
         dataFile.close();
@@ -138,9 +174,22 @@ public:
         propertyFile.close();
     }
 
+    void read_from_direction(long direction) {
+        fstream dataFile(_dataFile, ios::binary | ios::in | ios::out);
+        if (!dataFile.is_open()) throw invalid_argument("Cannot open data file");
+        dataFile.seekg(direction, ios::beg);
+        Bucket<Record> bucket{};
+        dataFile.read((char* ) &bucket, sizeof(bucket));
+        bucket.print();
+        dataFile.seekg(0, ios::end);
+        long position = dataFile.tellg();
+        cout << "EOF position: " << position << endl;
+        dataFile.close();
+    }
+
 
     pair<bool, Record> search(KeyType key) {
-        long bucketPos = searchIndex(key);
+        long bucketPos = getInitialBucketPosition(key);
 
         fstream dataFile(this->_dataFile, ios::binary | ios::in);
         if (!dataFile.is_open()) throw invalid_argument("Cannot open data file.");
@@ -150,12 +199,12 @@ public:
         while (bucketPos != -1) {
             dataFile.seekg(bucketPos, ios::beg);
             dataFile.read((char *) &bucket, sizeof(bucket));
-            dataFile.close();
             auto result = bucket.search(toPosition(key));
-
             if (result.first == true) return result;
             bucketPos = bucket._next;
         }
+
+        dataFile.close();
 
         Record not_found;
 
@@ -166,9 +215,9 @@ public:
 
     vector<Record> rangeSearch(KeyType keyA, KeyType keyB) {
         if (keyA > keyB) throw invalid_argument("Second key must be greater or equal to the first one.");
-        vector<Record> result{};
+        vector<Record> result;
         for (KeyType k = keyA; k <= keyB; ++k) {
-            auto e = search(k);
+            auto e = this->search(k);
             if (e.first == true) result.push_back(e.second);
         }
         return result;
@@ -179,7 +228,7 @@ public:
     }
 
     void remove(KeyType key) {
-        long bucketPos = searchIndex(key);
+        long bucketPos = getInitialBucketPosition(key);
         
         Bucket<Record> bucket;
         fstream dataFile(_dataFile, ios::binary | ios::in | ios::out);
