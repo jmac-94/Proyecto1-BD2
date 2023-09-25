@@ -5,3 +5,5 @@ CMakeLists.txt
 cmake-build-debug/
 */*.bin
 */*.out
+*.bin
+.vscode/
