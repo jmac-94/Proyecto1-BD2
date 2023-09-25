@@ -46,8 +46,7 @@ n es el número de nodos en el AVL File y k el número de nodos en el rango que 
 
 | Command | Description | Complexity |
 | --- | --- | --- |
-| Insert | Se desciende en el árbol y se ubica adecuadamente el registro; luego, se verifica si el árbol está balanceado. Si no lo está, se realizan rotaciones.
- | O(logn) |
+| Insert | Se desciende en el árbol y se ubica adecuadamente el registro; luego, se verifica si el árbol está balanceado. Si no lo está, se realizan rotaciones.| O(logn) |
 | RangeSearch | Se desciende recursivamente el subárbol izquierdo y derecho y se almacenan los nodos que se encuentren dentro del rango en el vector Records. | O(k + logn) |
 | Remove | Se desciende en el árbol buscando la key que se desee eliminar y la cual se ha pasado como parámetro, si se encuentra, se realiza la eliminación y si no se encuentra retorna false. | O(logn) |
 
@@ -57,8 +56,7 @@ Creación de buckets con código hash para almacenar registros en la memoria sec
 
 | Command | Description | Complexity |
 | --- | --- | --- |
-| Insert | Se maneja la inserción del Extendible Hashing, además gestiona el desbordamiento de los Buckets cuando es necesario.
- | O(1) const O(n) desbordamiento |
+| Insert | Se maneja la inserción del Extendible Hashing, además gestiona el desbordamiento de los Buckets cuando es necesario.| O(1) const O(n) desbordamiento |
 | RangeSearch | La función Search busca un registro específico y la función RangeSearch busca los registros en un rango de keys y los retorna. | O(1) const O(n) desbordamiento |
 | Remove | Se calcula la posición del bucket en la que se debe buscar el key y se realiza una búsqueda y si se encuentra el registro se elimina. | O(1) const O(n) desbordamiento |
 
@@ -68,6 +66,5 @@ En esta técnica el archivo se almacena uno tras otro de forma secuancial. Esta 
 
 | Command | Description | Complexity |
 | --- | --- | --- |
-| Insert | Si hay espacio en el archivo auxiliar, se busca la posición adecuada y se inserta. Si no hay espacio en el archivo auxiliar se reorganiza el archivo y se intenta nuevamente la iserción.
- | O(n) |
+| Insert | Si hay espacio en el archivo auxiliar, se busca la posición adecuada y se inserta. Si no hay espacio en el archivo auxiliar se reorganiza el archivo y se intenta nuevamente la iserción.| O(n) |
 | RangeSearch | En el Sequential File al estar ordenado los registros es más conveniente realizar la búsqueda binaria para realizar una búsqueda específica o por rangos. | O(log n) |
